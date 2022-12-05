@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { binary_search } from "./binary-search";
+import { binary_search } from ".";
 
 test("search number in sorted array", () => {
   expect(binary_search([], 1)).toBe(-1);
