@@ -1,4 +1,4 @@
-import type { SortingOpts } from "./sort-utils";
+import type { SortingOpts } from "../sort-utils";
 
 export function selection_sort<T = number>(
   list: T[],

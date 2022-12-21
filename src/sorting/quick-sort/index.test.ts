@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { selection_sort } from "../selection-sort";
+import { quick_sort } from ".";
 import {
   equal_arr,
   not_sorted_arr,
@@ -9,29 +9,29 @@ import {
   test_negative_numbers_sort,
   test_sort,
   test_sort_with_custom_comparator,
-} from "./sort-utils";
+} from "../sort-utils";
 
 // Complexity constants.
-const SORTED_ARRAY_VISITING_COUNT = 209;
-const NOT_SORTED_ARRAY_VISITING_COUNT = 209;
-const REVERSE_SORTED_ARRAY_VISITING_COUNT = 209;
-const EQUAL_ARRAY_VISITING_COUNT = 209;
+const SORTED_ARRAY_VISITING_COUNT = 190;
+const NOT_SORTED_ARRAY_VISITING_COUNT = 62;
+const REVERSE_SORTED_ARRAY_VISITING_COUNT = 190;
+const EQUAL_ARRAY_VISITING_COUNT = 19;
 
 test("sort array", () => {
-  test_sort(selection_sort);
+  test_sort(quick_sort);
 });
 
 test("sort array with custom comparator", () => {
-  test_sort_with_custom_comparator(selection_sort);
+  test_sort_with_custom_comparator(quick_sort);
 });
 
 test("sort negative numbers", () => {
-  test_negative_numbers_sort(selection_sort);
+  test_negative_numbers_sort(quick_sort);
 });
 
 test("visit EQUAL array element specified number of times", () => {
   test_algorithm_time_complexity(
-    selection_sort,
+    quick_sort,
     equal_arr,
     EQUAL_ARRAY_VISITING_COUNT
   );
@@ -39,7 +39,7 @@ test("visit EQUAL array element specified number of times", () => {
 
 test("visit SORTED array element specified number of times", () => {
   test_algorithm_time_complexity(
-    selection_sort,
+    quick_sort,
     sorted_arr,
     SORTED_ARRAY_VISITING_COUNT
   );
@@ -47,7 +47,7 @@ test("visit SORTED array element specified number of times", () => {
 
 test("visit NOT SORTED array element specified number of times", () => {
   test_algorithm_time_complexity(
-    selection_sort,
+    quick_sort,
     not_sorted_arr,
     NOT_SORTED_ARRAY_VISITING_COUNT
   );
@@ -55,7 +55,7 @@ test("visit NOT SORTED array element specified number of times", () => {
 
 test("should visit REVERSE SORTED array element specified number of times", () => {
   test_algorithm_time_complexity(
-    selection_sort,
+    quick_sort,
     reverse_arr,
     REVERSE_SORTED_ARRAY_VISITING_COUNT
   );
