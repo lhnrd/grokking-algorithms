@@ -13,7 +13,13 @@ export function linked_list_node<V>(
   };
 }
 
-export function linked_list<V>(comparator?: ComparatorFn<V>): LinkedList<V> {
+export function linked_list<V>(
+  comparator: ComparatorFn<V> = (list_node: V, search_node: V) => {
+    if (list_node > search_node) return 1;
+    if (list_node < search_node) return -1;
+    return 0;
+  }
+): LinkedList<V> {
   let head = null;
   let tail = null;
 
@@ -86,7 +92,7 @@ export function linked_list<V>(comparator?: ComparatorFn<V>): LinkedList<V> {
     delete(value: V) {
       let deleted_node = null;
 
-      if (this.head && this.head.value === value) {
+      if (this.head && comparator(this.head.value, value) === 0) {
         deleted_node = this.head;
         this.head = this.head.next;
 
@@ -94,7 +100,7 @@ export function linked_list<V>(comparator?: ComparatorFn<V>): LinkedList<V> {
       }
 
       for (let node of this) {
-        if (node.next?.value === value) {
+        if (node.next && comparator(node.next.value, value) === 0) {
           deleted_node = node.next;
           node.next = node.next.next;
 
