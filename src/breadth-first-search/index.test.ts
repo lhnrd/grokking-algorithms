@@ -1,8 +1,8 @@
-import { expect, test } from "vitest";
+import { expect, test, vitest } from "vitest";
 import { breadth_first_search } from ".";
 import { graph } from "../graph";
 
-test("should perform BFS operation on graph", () => {
+test("perform BFS operation on graph", () => {
   const g = graph(true);
 
   const vertex_a = "A";
@@ -26,160 +26,32 @@ test("should perform BFS operation on graph", () => {
 
   expect(g.toString()).toBe("A,B,C,G,D,E,F,H");
 
-  // const enterVertexCallback = vitest.fn();
-  // const leaveVertexCallback = vitest.fn();
+  const navigated_vertex_callback = vitest.fn();
 
-  // Traverse graphs without callbacks first.
   expect(breadth_first_search(g, vertex_a, vertex_h)).toBeTruthy();
   expect(breadth_first_search(g, vertex_c, vertex_a)).toBeFalsy();
 
-  // Traverse graph with enterVertex and leaveVertex callbacks.
-  // breadth_first_search(graph, vertexA, {
-  //   enterVertex: enterVertexCallback,
-  //   leaveVertex: leaveVertexCallback,
-  // });
+  breadth_first_search(g, vertex_a, vertex_g, {
+    navigated_vertex: navigated_vertex_callback,
+  });
 
-  // expect(enterVertexCallback).toHaveBeenCalledTimes(8);
-  // expect(leaveVertexCallback).toHaveBeenCalledTimes(8);
+  expect(navigated_vertex_callback).toHaveBeenCalledTimes(8);
 
-  // const enterVertexParamsMap = [
-  //   { currentVertex: vertexA, previousVertex: null },
-  //   { currentVertex: vertexB, previousVertex: vertexA },
-  //   { currentVertex: vertexD, previousVertex: vertexB },
-  //   { currentVertex: vertexE, previousVertex: vertexD },
-  //   { currentVertex: vertexC, previousVertex: vertexE },
-  //   { currentVertex: vertexH, previousVertex: vertexC },
-  //   { currentVertex: vertexF, previousVertex: vertexH },
-  //   { currentVertex: vertexG, previousVertex: vertexF },
-  // ];
+  const navigated_vertex_params = [
+    { current_vertex: vertex_a, previous_vertex: undefined },
+    { current_vertex: vertex_b, previous_vertex: vertex_a },
+    { current_vertex: vertex_d, previous_vertex: vertex_b },
+    { current_vertex: vertex_e, previous_vertex: vertex_d },
+    { current_vertex: vertex_c, previous_vertex: vertex_e },
+    { current_vertex: vertex_h, previous_vertex: vertex_c },
+    { current_vertex: vertex_f, previous_vertex: vertex_h },
+    { current_vertex: vertex_g, previous_vertex: vertex_f },
+  ];
 
-  // for (
-  //   let callIndex = 0;
-  //   callIndex < graph.getAllVertices().length;
-  //   callIndex += 1
-  // ) {
-  //   const params = enterVertexCallback.mock.calls[callIndex][0];
-  //   expect(params.currentVertex).toEqual(
-  //     enterVertexParamsMap[callIndex].currentVertex
-  //   );
-  //   expect(params.previousVertex).toEqual(
-  //     enterVertexParamsMap[callIndex].previousVertex
-  //   );
-  // }
+  navigated_vertex_params.forEach((expected, index) => {
+    const params = navigated_vertex_callback.mock.calls[index];
 
-  // const leaveVertexParamsMap = [
-  //   { currentVertex: vertexA, previousVertex: null },
-  //   { currentVertex: vertexB, previousVertex: vertexA },
-  //   { currentVertex: vertexD, previousVertex: vertexB },
-  //   { currentVertex: vertexE, previousVertex: vertexD },
-  //   { currentVertex: vertexC, previousVertex: vertexE },
-  //   { currentVertex: vertexH, previousVertex: vertexC },
-  //   { currentVertex: vertexF, previousVertex: vertexH },
-  //   { currentVertex: vertexG, previousVertex: vertexF },
-  // ];
-
-  // for (
-  //   let callIndex = 0;
-  //   callIndex < graph.getAllVertices().length;
-  //   callIndex += 1
-  // ) {
-  //   const params = leaveVertexCallback.mock.calls[callIndex][0];
-  //   expect(params.currentVertex).toEqual(
-  //     leaveVertexParamsMap[callIndex].currentVertex
-  //   );
-  //   expect(params.previousVertex).toEqual(
-  //     leaveVertexParamsMap[callIndex].previousVertex
-  //   );
-  // }
+    expect(params?.[0]?.[0]).toEqual(expected.current_vertex);
+    expect(params?.[1]?.[0]).toEqual(expected.previous_vertex);
+  });
 });
-
-// test("should allow to create custom vertex visiting logic", () => {
-//   const graph = new Graph(true);
-
-//   const vertexA = new GraphVertex("A");
-//   const vertexB = new GraphVertex("B");
-//   const vertexC = new GraphVertex("C");
-//   const vertexD = new GraphVertex("D");
-//   const vertexE = new GraphVertex("E");
-//   const vertexF = new GraphVertex("F");
-//   const vertexG = new GraphVertex("G");
-//   const vertexH = new GraphVertex("H");
-
-//   const edgeAB = new GraphEdge(vertexA, vertexB);
-//   const edgeBC = new GraphEdge(vertexB, vertexC);
-//   const edgeCG = new GraphEdge(vertexC, vertexG);
-//   const edgeAD = new GraphEdge(vertexA, vertexD);
-//   const edgeAE = new GraphEdge(vertexA, vertexE);
-//   const edgeEF = new GraphEdge(vertexE, vertexF);
-//   const edgeFD = new GraphEdge(vertexF, vertexD);
-//   const edgeDH = new GraphEdge(vertexD, vertexH);
-//   const edgeGH = new GraphEdge(vertexG, vertexH);
-
-//   graph
-//     .addEdge(edgeAB)
-//     .addEdge(edgeBC)
-//     .addEdge(edgeCG)
-//     .addEdge(edgeAD)
-//     .addEdge(edgeAE)
-//     .addEdge(edgeEF)
-//     .addEdge(edgeFD)
-//     .addEdge(edgeDH)
-//     .addEdge(edgeGH);
-
-//   expect(graph.toString()).toBe("A,B,C,G,D,E,F,H");
-
-//   const enterVertexCallback = jest.fn();
-//   const leaveVertexCallback = jest.fn();
-
-//   // Traverse graph with enterVertex and leaveVertex callbacks.
-//   breadth_first_search(graph, vertexA, {
-//     enterVertex: enterVertexCallback,
-//     leaveVertex: leaveVertexCallback,
-//     allowTraversal: ({ currentVertex, nextVertex }) => {
-//       return !(currentVertex === vertexA && nextVertex === vertexB);
-//     },
-//   });
-
-//   expect(enterVertexCallback).toHaveBeenCalledTimes(7);
-//   expect(leaveVertexCallback).toHaveBeenCalledTimes(7);
-
-//   const enterVertexParamsMap = [
-//     { currentVertex: vertexA, previousVertex: null },
-//     { currentVertex: vertexD, previousVertex: vertexA },
-//     { currentVertex: vertexE, previousVertex: vertexD },
-//     { currentVertex: vertexH, previousVertex: vertexE },
-//     { currentVertex: vertexF, previousVertex: vertexH },
-//     { currentVertex: vertexD, previousVertex: vertexF },
-//     { currentVertex: vertexH, previousVertex: vertexD },
-//   ];
-
-//   for (let callIndex = 0; callIndex < 7; callIndex += 1) {
-//     const params = enterVertexCallback.mock.calls[callIndex][0];
-//     expect(params.currentVertex).toEqual(
-//       enterVertexParamsMap[callIndex].currentVertex
-//     );
-//     expect(params.previousVertex).toEqual(
-//       enterVertexParamsMap[callIndex].previousVertex
-//     );
-//   }
-
-//   const leaveVertexParamsMap = [
-//     { currentVertex: vertexA, previousVertex: null },
-//     { currentVertex: vertexD, previousVertex: vertexA },
-//     { currentVertex: vertexE, previousVertex: vertexD },
-//     { currentVertex: vertexH, previousVertex: vertexE },
-//     { currentVertex: vertexF, previousVertex: vertexH },
-//     { currentVertex: vertexD, previousVertex: vertexF },
-//     { currentVertex: vertexH, previousVertex: vertexD },
-//   ];
-
-//   for (let callIndex = 0; callIndex < 7; callIndex += 1) {
-//     const params = leaveVertexCallback.mock.calls[callIndex][0];
-//     expect(params.currentVertex).toEqual(
-//       leaveVertexParamsMap[callIndex].currentVertex
-//     );
-//     expect(params.previousVertex).toEqual(
-//       leaveVertexParamsMap[callIndex].previousVertex
-//     );
-//   }
-// });
