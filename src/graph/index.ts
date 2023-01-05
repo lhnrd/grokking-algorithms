@@ -1,18 +1,18 @@
 type Edge = string;
 type Neighbors = Edge[];
-type Vertex<T> = [T, Neighbors];
+export type Value = { toString(): string };
+export type Vertex<V extends Value> = [V, Neighbors];
+export type Graph<V extends Value> = ReturnType<typeof graph<V>>;
 
-function g_vertex<T>(value: T): Vertex<T> {
+function g_vertex<V extends Value>(value: V): Vertex<V> {
   return [value, []];
 }
 
-export function graph<T extends { toString(): string }>(
-  is_directed: boolean = false
-) {
-  let vertices: Record<string, Vertex<T>> = {};
+export function graph<V extends Value>(is_directed: boolean = false) {
+  let vertices: Record<string, Vertex<V>> = {};
 
   return {
-    add_vertex(value: T) {
+    add_vertex(value: V) {
       let vertex = this.get_vertex(value.toString()) ?? g_vertex(value);
 
       vertices[vertex[0].toString()] = vertex;
@@ -20,7 +20,7 @@ export function graph<T extends { toString(): string }>(
       return this;
     },
 
-    add_edge(value: T, o_value: T) {
+    add_edge(value: V, o_value: V) {
       if (this.has_edge(value, o_value)) throw new Error();
 
       let vertex = this.get_vertex(value.toString()) ?? g_vertex(value);
@@ -35,7 +35,7 @@ export function graph<T extends { toString(): string }>(
       return this;
     },
 
-    delete_edge(value: T, o_value: T) {
+    delete_edge(value: V, o_value: V) {
       if (!this.has_edge(value, o_value)) throw new Error();
 
       let vertex = this.get_vertex(value.toString());
@@ -75,12 +75,12 @@ export function graph<T extends { toString(): string }>(
       }
     },
 
-    find_edge(value: T, o_value: T) {
+    find_edge(value: V, o_value: V) {
       // temporary solution until I get to the weight chapter in the book
       return this.has_edge(value, o_value);
     },
 
-    has_edge(value: T, o_value: T) {
+    has_edge(value: V, o_value: V) {
       let vertex_key = value.toString();
       let vertex = this.get_vertex(vertex_key);
 
@@ -105,7 +105,7 @@ export function graph<T extends { toString(): string }>(
 
     get_edges() {
       return Object.entries(vertices).flatMap(([vertex_k, v]) => {
-        let vertex = v as Vertex<T>;
+        let vertex = v as Vertex<V>;
         let vertex_edges = vertex[1].map((edge) => [vertex_k, edge]);
 
         return vertex_edges;
@@ -116,7 +116,7 @@ export function graph<T extends { toString(): string }>(
       return Object.values(vertices);
     },
 
-    get_neighbors(value: T) {
+    get_neighbors(value: V) {
       return this.get_vertex(value.toString())?.[1];
     },
 
