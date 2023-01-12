@@ -1,36 +1,57 @@
-type Edge = string;
-type Neighbors = Edge[];
-export type Value = { toString(): string };
+export type Weight = number | null;
+export type Edge = [string, string, Weight];
+export type Edges = Edge[];
+export type Neighbors = Record<string, number | null>;
 export type Vertex<V extends Value> = [V, Neighbors];
 export type Graph<V extends Value> = ReturnType<typeof graph<V>>;
+export type Value = { toString(): string };
 
 function g_vertex<V extends Value>(value: V): Vertex<V> {
-  return [value, []];
+  return [value, {}];
+}
+
+function g_vertex_key<V extends Value>(vertex: Vertex<V>) {
+  return vertex[0].toString();
 }
 
 export function graph<V extends Value>(is_directed: boolean = false) {
   let vertices: Record<string, Vertex<V>> = {};
 
   return {
-    add_vertex(value: V) {
-      let vertex = this.get_vertex(value.toString()) ?? g_vertex(value);
+    get_key(value: V) {
+      return value.toString();
+    },
 
-      vertices[vertex[0].toString()] = vertex;
+    add_vertex(value: V) {
+      if (this.has_vertex(value)) throw new Error("Vertex already exists.");
+
+      let vertex = g_vertex(value);
+      let vertex_key = g_vertex_key(vertex);
+
+      vertices[vertex_key] = vertex;
 
       return this;
     },
 
-    add_edge(value: V, o_value: V) {
-      if (this.has_edge(value, o_value)) throw new Error();
+    has_vertex(value: V) {
+      return !!vertices[this.get_key(value)];
+    },
 
-      let vertex = this.get_vertex(value.toString()) ?? g_vertex(value);
-      let o_vertex = this.get_vertex(o_value.toString()) ?? g_vertex(o_value);
+    add_edge(value: V, o_value: V, weight: number | null = null) {
+      if (this.has_edge(value, o_value))
+        throw new Error("Edge already exists.");
 
-      vertex[1].push(o_vertex[0].toString());
-      if (!is_directed) o_vertex[1].push(vertex[0].toString());
+      let vertex = this.get_vertex(value);
+      let o_vertex = this.get_vertex(o_value);
 
-      vertices[vertex[0].toString()] = vertex;
-      vertices[o_vertex[0].toString()] = o_vertex;
+      let vertex_key = g_vertex_key(vertex);
+      let o_vertex_key = g_vertex_key(o_vertex);
+
+      vertex[1][o_vertex_key] = weight;
+      if (!is_directed) o_vertex[1][vertex_key] = weight;
+
+      vertices[vertex_key] = vertex;
+      vertices[o_vertex_key] = o_vertex;
 
       return this;
     },
@@ -38,75 +59,59 @@ export function graph<V extends Value>(is_directed: boolean = false) {
     delete_edge(value: V, o_value: V) {
       if (!this.has_edge(value, o_value)) throw new Error();
 
-      let vertex = this.get_vertex(value.toString());
-      let vertex_neighbors = vertex?.[1];
-      let edge_index = vertex_neighbors?.indexOf(o_value.toString());
+      let vertex = this.get_vertex(value);
+      let o_vertex_key = this.get_key(o_value);
 
-      if (
-        vertex === undefined ||
-        vertex_neighbors === undefined ||
-        edge_index === undefined
-      )
-        throw new Error();
+      if (vertex === undefined) throw new Error();
 
-      vertex[1] = [
-        ...vertex_neighbors.slice(0, edge_index),
-        ...vertex_neighbors.slice(edge_index + 1),
-      ];
+      let { [o_vertex_key]: o_vertex, ...vertex_neighbors } = vertex[1];
+
+      vertex[1] = vertex_neighbors;
       vertices[vertex[0].toString()] = vertex;
 
       if (!is_directed) {
-        let o_vertex = this.get_vertex(o_value.toString());
-        let o_vertex_neighbors = o_vertex?.[1];
-        let o_edge_index = o_vertex_neighbors?.indexOf(value.toString());
+        let o_vertex = this.get_vertex(o_value);
+        let vertex_key = g_vertex_key(vertex);
 
-        if (
-          o_vertex === undefined ||
-          o_vertex_neighbors === undefined ||
-          o_edge_index === undefined
-        )
-          throw new Error();
+        if (o_vertex === undefined) throw new Error();
 
-        o_vertex[1] = [
-          ...o_vertex_neighbors.slice(0, o_edge_index),
-          ...o_vertex_neighbors.slice(o_edge_index + 1),
-        ];
+        let { [vertex_key]: _vertex, ...o_vertex_neighbors } = vertex[1];
+
+        o_vertex[1] = o_vertex_neighbors;
         vertices[o_vertex[0].toString()] = o_vertex;
       }
     },
 
-    find_edge(value: V, o_value: V) {
-      // temporary solution until I get to the weight chapter in the book
-      return this.has_edge(value, o_value);
+    find_edge(value: V, o_value: V): Edge | null {
+      let vertex = this.get_vertex(value);
+      let vertex_key = g_vertex_key(vertex);
+      let neighbors = vertex[1];
+      let o_vertex_key = this.get_key(o_value);
+
+      if (!(o_vertex_key in neighbors)) return null;
+
+      return [vertex_key, o_vertex_key, neighbors[o_vertex_key] ?? null];
     },
 
     has_edge(value: V, o_value: V) {
-      let vertex_key = value.toString();
-      let vertex = this.get_vertex(vertex_key);
+      let vertex = this.get_vertex(value);
+      let neighbors = vertex[1];
+      let o_vertex_key = this.get_key(o_value);
 
-      let o_vertex_key = o_value.toString();
-      let o_vertex = this.get_vertex(o_vertex_key);
-
-      if (is_directed) {
-        return vertex && vertex[1].includes(o_vertex_key);
-      }
-
-      return (
-        vertex &&
-        vertex[1].includes(o_vertex_key) &&
-        o_vertex &&
-        o_vertex[1].includes(vertex_key)
-      );
+      return o_vertex_key in neighbors;
     },
 
-    get_vertex(key: string) {
-      return vertices[key];
+    get_vertex(value: V): Vertex<V> {
+      let vertex = vertices[this.get_key(value)];
+      if (!vertex) throw new Error("Vertex does not exist.");
+      return vertex;
     },
 
-    get_edges() {
-      return Object.entries(vertices).flatMap(([vertex_k, v]) => {
-        let vertex = v as Vertex<V>;
-        let vertex_edges = vertex[1].map((edge) => [vertex_k, edge]);
+    get_edges(): Edges {
+      return Object.entries(vertices).flatMap(([vertex_k, vertex]) => {
+        let vertex_edges = Object.entries(vertex[1]).map<Edge>(
+          ([neighbor, weight]) => [vertex_k, neighbor, weight]
+        );
 
         return vertex_edges;
       });
@@ -116,8 +121,9 @@ export function graph<V extends Value>(is_directed: boolean = false) {
       return Object.values(vertices);
     },
 
-    get_neighbors(value: V) {
-      return this.get_vertex(value.toString())?.[1];
+    get_neighbors(value: V): Neighbors {
+      let vertex = this.get_vertex(value);
+      return vertex[1];
     },
 
     toString() {
