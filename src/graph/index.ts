@@ -101,10 +101,14 @@ export function graph<V extends Value>(is_directed: boolean = false) {
       return o_vertex_key in neighbors;
     },
 
-    get_vertex(value: V): Vertex<V> {
-      let vertex = vertices[this.get_key(value)];
+    get_vertex_by_key(key: string): Vertex<V> {
+      let vertex = vertices[key];
       if (!vertex) throw new Error("Vertex does not exist.");
       return vertex;
+    },
+
+    get_vertex(value: V): Vertex<V> {
+      return this.get_vertex_by_key(this.get_key(value));
     },
 
     get_edges(): Edges {
